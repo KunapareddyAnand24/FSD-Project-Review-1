@@ -35,10 +35,13 @@ export function AuthProvider({ children }) {
     });
 
     const login = (email, password) => {
+        const inputEmail = email.trim().toLowerCase();
+
         // Authenticate against the persistent user list instead of static mockData
         const found = localUsers.find(
-            (u) => u.email === email && u.password === password
+            (u) => u.email.trim().toLowerCase() === inputEmail && u.password === password.trim()
         );
+
         if (found) {
             const userData = { ...found };
             delete userData.password;
