@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { FiUser, FiMail, FiBook, FiAward, FiSave } from "react-icons/fi";
+import { FiUser, FiMail, FiBook, FiAward, FiSave, FiUpload, FiFileText } from "react-icons/fi";
 
 export default function StudentProfile() {
     const { user, updateProfile } = useAuth();
@@ -12,11 +12,38 @@ export default function StudentProfile() {
         gpa: user.gpa || "",
         graduationYear: user.graduationYear || "",
         skills: (user.skills || []).join(", "),
+        profileImage: user.profileImage || null,
+        resumeFile: user.resumeFile || null,
     });
     const [saved, setSaved] = useState(false);
+    const photoInputRef = useRef(null);
+    const resumeInputRef = useRef(null);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    const handlePhotoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setForm(prev => ({ ...prev, profileImage: reader.result }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleResumeUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                // Store base64 encoded document
+                setForm(prev => ({ ...prev, resumeFile: { name: file.name, data: reader.result } }));
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSave = () => {
@@ -39,7 +66,17 @@ export default function StudentProfile() {
             </div>
 
             <div className="profile-card">
-                <div className="profile-avatar-large">{user.avatar}</div>
+                <div className="profile-avatar-large">
+                    {form.profileImage || user.profileImage ? (
+                        <img
+                            src={form.profileImage || user.profileImage}
+                            alt="Profile"
+                            style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                        />
+                    ) : (
+                        user.avatar
+                    )}
+                </div>
                 <div className="profile-info">
                     {!editing ? (
                         <>
@@ -68,6 +105,13 @@ export default function StudentProfile() {
                                         <span key={skill} className="skill-tag">{skill}</span>
                                     ))}
                                 </div>
+                            </div>
+                            <div className="profile-field">
+                                <strong>Resume:</strong> {user.resumeFile ? (
+                                    <a href={user.resumeFile.data} download={user.resumeFile.name} className="btn-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                                        <FiFileText /> {user.resumeFile.name}
+                                    </a>
+                                ) : "Not uploaded"}
                             </div>
                             <button className="btn btn-primary" onClick={() => setEditing(true)}>
                                 Edit Profile
@@ -99,6 +143,36 @@ export default function StudentProfile() {
                                 <label>Skills (comma separated)</label>
                                 <input name="skills" value={form.skills} onChange={handleChange} />
                             </div>
+
+                            <div className="form-row" style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label>Profile Photo</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        ref={photoInputRef}
+                                        style={{ display: 'none' }}
+                                        onChange={handlePhotoUpload}
+                                    />
+                                    <button type="button" className="btn btn-outline btn-block" onClick={() => photoInputRef.current?.click()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                        <FiUpload /> {form.profileImage ? "Change Photo" : "Upload Photo"}
+                                    </button>
+                                </div>
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label>Resume (PDF)</label>
+                                    <input
+                                        type="file"
+                                        accept=".pdf,.doc,.docx"
+                                        ref={resumeInputRef}
+                                        style={{ display: 'none' }}
+                                        onChange={handleResumeUpload}
+                                    />
+                                    <button type="button" className="btn btn-outline btn-block" onClick={() => resumeInputRef.current?.click()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                        <FiUpload /> {form.resumeFile ? "Change Resume" : "Upload Resume"}
+                                    </button>
+                                </div>
+                            </div>
+
                             <div className="form-actions">
                                 <button className="btn btn-primary" onClick={handleSave}>
                                     <FiSave /> Save Changes
