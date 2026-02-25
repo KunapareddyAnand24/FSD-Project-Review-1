@@ -16,10 +16,14 @@ export default function ApplicationTable({ applications, showActions, onUpdateSt
     const { localUsers } = useAuth();
     const [selectedCandidate, setSelectedCandidate] = useState(null);
 
-    const handleViewProfile = (studentId) => {
-        const student = localUsers.find(u => u.id === studentId);
+    const handleViewProfile = (app) => {
+        const student = localUsers.find(u => u.id === app.studentId);
         if (student) {
-            setSelectedCandidate(student);
+            // Use the application-specific resume if it exists, otherwise fall back to profile resume
+            setSelectedCandidate({
+                ...student,
+                resumeFile: app.resumeFile || student.resumeFile
+            });
         }
     };
 
@@ -109,7 +113,7 @@ export default function ApplicationTable({ applications, showActions, onUpdateSt
                                             <button
                                                 className="btn-sm btn-outline"
                                                 style={{ display: "flex", alignItems: "center", gap: "6px" }}
-                                                onClick={() => handleViewProfile(app.studentId)}
+                                                onClick={() => handleViewProfile(app)}
                                                 title="View Candidate Profile"
                                             >
                                                 <FiUser /> Profile

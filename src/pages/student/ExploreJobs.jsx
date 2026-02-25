@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { FiX, FiUpload, FiFileText } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationContext";
 import JobCard from "../../components/JobCard";
@@ -14,6 +15,11 @@ export default function ExploreJobs() {
     const [appliedJobs, setAppliedJobs] = useState(
         applications.filter((a) => a.studentId === user.id).map((a) => a.jobId)
     );
+
+    // Modal state for Resume Upload during Application
+    const [selectedJob, setSelectedJob] = useState(null);
+    const [applicationResume, setApplicationResume] = useState(user.resumeFile || null);
+    const resumeInputRef = useRef(null);
 
     const locations = [...new Set(jobs.map((j) => j.location))];
     const today = new Date().toISOString().split("T")[0];
@@ -32,32 +38,53 @@ export default function ExploreJobs() {
     const activeJobs = filtered.filter((j) => j.deadline >= today);
     const expiredJobs = filtered.filter((j) => j.deadline < today);
 
-    const handleApply = (job) => {
+    const handleApplyClick = (job) => {
         // Prevent duplicate applications
         if (appliedJobs.includes(job.id)) return;
 
         // Check if job is expired
         if (job.deadline < today) return;
 
+        // Open the modal instead of applying directly
+        setApplicationResume(user.resumeFile || null); // Reset to their default profile resume
+        setSelectedJob(job);
+    };
+
+    const handleResumeUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setApplicationResume({ name: file.name, data: reader.result });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const confirmApplication = () => {
+        if (!selectedJob) return;
+
         const newApp = {
-            jobId: job.id,
+            jobId: selectedJob.id,
             studentId: user.id,
             studentName: user.name,
-            jobTitle: job.title,
-            companyName: job.companyName,
+            jobTitle: selectedJob.title,
+            companyName: selectedJob.companyName,
             status: "pending",
             appliedAt: new Date().toISOString().split("T")[0],
             updatedAt: new Date().toISOString().split("T")[0],
             notes: "",
+            // Attach the uploaded resume specifically to this application
+            resumeFile: applicationResume,
         };
         addApplication(newApp);
-        setAppliedJobs([...appliedJobs, job.id]);
+        setAppliedJobs([...appliedJobs, selectedJob.id]);
 
         // Send notification to student
         addNotification({
             type: "success",
             title: "Application Submitted",
-            message: `You successfully applied for ${job.title} at ${job.companyName}.`,
+            message: `You successfully applied for ${selectedJob.title} at ${selectedJob.companyName}.`,
             role: "student",
             userId: user.id,
         });
@@ -66,10 +93,13 @@ export default function ExploreJobs() {
         addNotification({
             type: "info",
             title: "New Application Received",
-            message: `A new student applied for your ${job.title} role.`,
+            message: `A new student applied for your ${selectedJob.title} role.`,
             role: "employer",
-            userId: job.employerId,
+            userId: selectedJob.employerId,
         });
+
+        // Close modal
+        setSelectedJob(null);
     };
 
     return (
@@ -112,7 +142,7 @@ export default function ExploreJobs() {
                             key={job.id}
                             job={job}
                             applied={appliedJobs.includes(job.id)}
-                            onApply={handleApply}
+                            onApply={handleApplyClick}
                         />
                     ))
                 )}
@@ -131,6 +161,59 @@ export default function ExploreJobs() {
                                 <JobCard job={job} showActions={false} />
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Application Resume Upload Modal */}
+            {selectedJob && (
+                <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div className="modal-content card" style={{ width: '90%', maxWidth: '500px', position: 'relative', padding: '30px' }}>
+                        <button
+                            onClick={() => setSelectedJob(null)}
+                            style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                        >
+                            <FiX />
+                        </button>
+
+                        <h2 style={{ marginTop: 0, marginBottom: '20px' }}>
+                            Apply for {selectedJob.title}
+                        </h2>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '25px' }}>
+                            Upload a specific resume tailored for <strong>{selectedJob.companyName}</strong>.
+                            If you do not upload a new one, your default profile resume will be used.
+                        </p>
+
+                        <div className="form-group">
+                            <label>Application Resume (PDF)</label>
+
+                            {applicationResume && (
+                                <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', backgroundColor: 'var(--bg-secondary)', borderRadius: '6px' }}>
+                                    <FiFileText style={{ color: 'var(--accent-primary)' }} />
+                                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{applicationResume.name}</span>
+                                </div>
+                            )}
+
+                            <input
+                                type="file"
+                                accept=".pdf,.doc,.docx"
+                                ref={resumeInputRef}
+                                style={{ display: 'none' }}
+                                onChange={handleResumeUpload}
+                            />
+                            <button type="button" className="btn btn-outline btn-block" onClick={() => resumeInputRef.current?.click()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                <FiUpload /> {applicationResume ? "Change Selected Resume" : "Upload Resume"}
+                            </button>
+                        </div>
+
+                        <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button className="btn btn-outline" onClick={() => setSelectedJob(null)}>
+                                Cancel
+                            </button>
+                            <button className="btn btn-primary" onClick={confirmApplication}>
+                                Submit Application
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
