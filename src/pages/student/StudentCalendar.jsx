@@ -13,29 +13,38 @@ export default function StudentCalendar() {
     // Filter applications for this student and create events
     const myApplications = applications.filter(a => a.studentId === user.id);
     const dynamicEvents = myApplications
-        .filter(a => ['shortlisted', 'interview_scheduled', 'selected'].includes(a.status))
+        .filter(a => ['shortlisted', 'interview_scheduled', 'selected', 'placed'].includes(a.status))
         .map((app) => {
             const applyStr = app.appliedAt || "2026-02-15";
             const parts = applyStr.split("-");
-            // Basic fallback if appliedAt format varies
             let baseDay = parts.length === 3 ? parseInt(parts[2], 10) : 15;
             if (isNaN(baseDay)) baseDay = 15;
 
             let eventDay = baseDay;
+            let eventMonth = "February"; // Default for current month demo
+            let eventTime = "10:00 AM";
             let title = "";
             let type = "";
 
             if (app.status === 'interview_scheduled') {
-                eventDay = (baseDay + 7) > 28 ? 5 : (baseDay + 7);
+                if (app.interviewDate) {
+                    const scheduledParts = app.interviewDate.split("-");
+                    eventDay = parseInt(scheduledParts[2], 10);
+                    // Handle month name naturally if needed, but keeping it simple for now
+                    eventMonth = scheduledParts[1] === "02" ? "February" : "March";
+                } else {
+                    eventDay = (baseDay + 7) > 28 ? 5 : (baseDay + 7);
+                }
+                eventTime = app.interviewTime || "10:00 AM";
                 title = `${app.companyName} Interview`;
                 type = 'interview';
-            } else if (app.status === 'selected') {
+            } else if (app.status === 'selected' || app.status === 'placed') {
                 eventDay = (baseDay + 10) > 28 ? 12 : (baseDay + 10);
-                title = `${app.companyName} Onboarding`;
+                title = `${app.companyName} Selection`;
                 type = 'event';
             } else if (app.status === 'shortlisted') {
                 eventDay = (baseDay + 3) > 28 ? 2 : (baseDay + 3);
-                title = `${app.companyName} Test Due`;
+                title = `${app.companyName} Shortlisted`;
                 type = 'deadline';
             }
 
@@ -44,7 +53,8 @@ export default function StudentCalendar() {
                 title: title,
                 company: app.companyName,
                 date: eventDay,
-                time: "10:00 AM",
+                month: eventMonth,
+                time: eventTime,
                 type: type,
                 link: type === 'interview' ? "meet.google.com/abc" : null
             };
@@ -155,7 +165,7 @@ export default function StudentCalendar() {
                                         <td>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
                                                 <FiClock />
-                                                Feb {event.date}, {event.time}
+                                                {event.month} {event.date}, {event.time}
                                             </div>
                                         </td>
                                         <td style={{ fontWeight: 600 }}>{event.title}</td>

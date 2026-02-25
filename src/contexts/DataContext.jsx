@@ -57,11 +57,16 @@ export function DataProvider({ children }) {
         setApplications((prev) => [...prev, { id: Date.now(), ...appData }]);
     }, []);
 
-    const updateApplicationStatus = useCallback((appId, newStatus) => {
+    const updateApplicationStatus = useCallback((appId, newStatus, extraData = {}) => {
         setApplications((prev) =>
             prev.map((app) =>
                 app.id === appId
-                    ? { ...app, status: newStatus, updatedAt: new Date().toISOString().split("T")[0] }
+                    ? {
+                        ...app,
+                        status: newStatus,
+                        ...extraData,
+                        updatedAt: new Date().toISOString().split("T")[0]
+                    }
                     : app
             )
         );

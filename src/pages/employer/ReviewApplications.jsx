@@ -15,18 +15,28 @@ export default function ReviewApplications() {
 
     const filtered = statusFilter === "all" ? myApplications : myApplications.filter((a) => a.status === statusFilter);
 
-    const handleUpdateStatus = (appId, newStatus) => {
+    const handleUpdateStatus = (appId, newStatus, extraData = {}) => {
         const appToUpdate = myApplications.find(a => a.id === appId);
 
-        // Use DataContext helper function to persist status change
-        updateApplicationStatus(appId, newStatus);
+        // Use DataContext helper function to persist status change with extra data (date/time)
+        updateApplicationStatus(appId, newStatus, extraData);
 
-        // Trigger Offer Letter Notification if selected
+        // Trigger Notification based on status
         if (newStatus === "selected" && appToUpdate) {
             addNotification({
                 type: "success",
                 title: "Offer Letter Received! 🎉",
                 message: `Congratulations! ${appToUpdate.companyName} has selected you for the ${appToUpdate.jobTitle} position. Check your email for next steps.`,
+                role: "student",
+                userId: appToUpdate.studentId,
+            });
+        }
+
+        if (newStatus === "interview_scheduled" && appToUpdate) {
+            addNotification({
+                type: "info",
+                title: "Interview Scheduled! 📅",
+                message: `Your interview for ${appToUpdate.jobTitle} at ${appToUpdate.companyName} has been scheduled for ${extraData.interviewDate || 'a soon-to-be-confirmed date'} at ${extraData.interviewTime || 'TBD'}.`,
                 role: "student",
                 userId: appToUpdate.studentId,
             });
