@@ -34,10 +34,10 @@ export default function Login() {
     };
 
     const demoCredentials = [
-        { label: "Admin", email: "admin@placement.com", password: "admin123" },
-        { label: "Student", email: "rahul@student.com", password: "student123" },
-        { label: "Employer", email: "hr@google.com", password: "employer123" },
-        { label: "Officer", email: "meena@officer.com", password: "officer123" },
+        { label: "Admin", email: "demo@admin.com", password: "password123" },
+        { label: "Student", email: "demo@student.com", password: "password123" },
+        { label: "Employer", email: "demo@employer.com", password: "password123" },
+        { label: "Officer", email: "demo@officer.com", password: "password123" },
     ];
 
     return (
