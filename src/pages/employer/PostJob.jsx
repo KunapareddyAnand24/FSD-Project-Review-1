@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useData } from "../../contexts/DataContext";
+import { useNotifications } from "../../contexts/NotificationContext";
 import { FiPlusCircle } from "react-icons/fi";
+import { hasSkillMatch } from "../../utils/skillMatcher";
 
 export default function PostJob() {
-    const { user } = useAuth();
+    const { user, localUsers } = useAuth();
     const { addJob } = useData();
+    const { addNotification } = useNotifications();
     const [form, setForm] = useState({
         title: "",
         description: "",
@@ -25,18 +28,33 @@ export default function PostJob() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const requirementsArray = form.requirements.split(",").map((r) => r.trim()).filter(Boolean);
         const newJob = {
             id: Date.now(),
             employerId: user.id,
             companyName: user.companyName || user.name,
             ...form,
             openings: parseInt(form.openings),
-            requirements: form.requirements.split(",").map((r) => r.trim()).filter(Boolean),
+            requirements: requirementsArray,
             status: "active",
             postedAt: new Date().toISOString().split("T")[0],
             applicants: 0,
         };
         addJob(newJob);
+
+        // Notify matching students
+        localUsers.forEach(u => {
+            if (u.role === "student" && hasSkillMatch(u.skills, requirementsArray)) {
+                addNotification({
+                    type: "info",
+                    title: "New Job Match! 🚀",
+                    message: `${newJob.companyName} is looking for a ${newJob.title}. Matches your skills!`,
+                    role: "student",
+                    userId: u.id,
+                });
+            }
+        });
+
         setSuccess(true);
         setForm({
             title: "",

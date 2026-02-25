@@ -4,6 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationContext";
 import JobCard from "../../components/JobCard";
 import { useData } from "../../contexts/DataContext";
+import { hasSkillMatch } from "../../utils/skillMatcher";
 
 export default function ExploreJobs() {
     const { user } = useAuth();
@@ -31,7 +32,9 @@ export default function ExploreJobs() {
             job.requirements.some((r) => r.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchType = typeFilter === "all" || job.type === typeFilter;
         const matchLocation = locationFilter === "all" || job.location === locationFilter;
-        return matchSearch && matchType && matchLocation && job.status === "active";
+        const matchSkills = hasSkillMatch(user.skills, job.requirements);
+
+        return matchSearch && matchType && matchLocation && matchSkills && job.status === "active";
     });
 
     // Separate active and expired jobs

@@ -3,17 +3,24 @@ import StatCard from "../../components/StatCard";
 import JobCard from "../../components/JobCard";
 import { useData } from "../../contexts/DataContext";
 import { useAuth } from "../../contexts/AuthContext";
+import { hasSkillMatch } from "../../utils/skillMatcher";
 
 export default function StudentDashboard() {
     const { user } = useAuth();
     const { jobs, applications } = useData();
     const myApplications = applications.filter((a) => a.studentId === user.id);
     const activeJobs = jobs.filter((j) => j.status === "active");
+
+    // Filter jobs that match student skills
+    const skillMatchingJobs = activeJobs.filter(job =>
+        hasSkillMatch(user.skills, job.requirements)
+    );
+
     const totalApplied = myApplications.length;
     const shortlistedCount = myApplications.filter((a) => a.status === "shortlisted" || a.status === "interview_scheduled").length;
     const selectedCount = myApplications.filter((a) => a.status === "selected").length;
 
-    const recommendedJobs = activeJobs.slice(0, 3);
+    const recommendedJobs = skillMatchingJobs.slice(0, 3);
     const myJobs = myApplications.filter((a) => a.status === "selected");
 
     return (
