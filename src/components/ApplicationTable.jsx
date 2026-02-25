@@ -178,184 +178,213 @@ export default function ApplicationTable({ applications, showActions, onUpdateSt
                 </tbody>
             </table>
 
-            {/* Candidate Profile Modal - Fit Screen / Full Width / Premium Efficiency */}
+            {/* Candidate Profile Modal - TRUE FULLSCREEN */}
             {selectedCandidate && (
-                <div className="modal-overlay" style={{
+                <div style={{
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.4)',
-                    backdropFilter: 'blur(12px)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    zIndex: 1000, padding: '20px',
-                    animation: 'fadeIn 0.3s ease'
+                    backgroundColor: 'rgba(0,0,0,0.75)',
+                    backdropFilter: 'blur(8px)',
+                    display: 'flex', alignItems: 'stretch', justifyContent: 'center',
+                    zIndex: 9999,
+                    animation: 'fadeIn 0.2s ease'
                 }}>
-                    <div className="modal-content" style={{
-                        width: '98vw', maxWidth: '1400px', height: '95vh',
+                    {/* Full screen modal box */}
+                    <div style={{
+                        width: '100vw', height: '100vh',
                         backgroundColor: 'var(--bg-card)',
-                        borderRadius: '24px',
+                        display: 'flex', flexDirection: 'column',
                         overflow: 'hidden',
-                        position: 'relative',
-                        display: 'flex',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        animation: 'scaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both'
+                        animation: 'scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both'
                     }}>
-                        {/* Close Button */}
-                        <button
-                            onClick={closeModal}
-                            style={{
-                                position: 'absolute', top: '24px', right: '24px',
-                                background: 'rgba(255,255,255,0.1)',
-                                border: 'none', width: '44px', height: '44px',
-                                borderRadius: '50%', fontSize: '1.4rem',
-                                cursor: 'pointer', color: 'var(--text-primary)',
+                        {/* ── TOP HEADER BAR ── */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: '20px',
+                            padding: '16px 28px',
+                            background: 'linear-gradient(90deg, var(--bg-secondary) 0%, var(--bg-card) 100%)',
+                            borderBottom: '1px solid var(--border-color)',
+                            flexShrink: 0,
+                            minHeight: '80px'
+                        }}>
+                            {/* Avatar */}
+                            <div style={{
+                                width: '56px', height: '56px', borderRadius: '16px',
+                                backgroundColor: 'var(--accent-primary)', color: 'white',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                zIndex: 10,
-                                transition: 'all 0.2s ease'
-                            }}
-                            onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
-                            onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
-                        >
-                            <FiX />
-                        </button>
-
-                        {/* Sidebar - Student Summary */}
-                        <div style={{
-                            width: '380px',
-                            background: 'linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-card) 100%)',
-                            borderRight: '1px solid var(--border-color)',
-                            display: 'flex', flexDirection: 'column',
-                            padding: '40px',
-                            overflowY: 'auto',
-                            animation: 'slideInLeft 0.5s ease 0.1s both'
-                        }}>
-                            <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                                <div style={{
-                                    width: '120px', height: '120px', borderRadius: '30px',
-                                    backgroundColor: 'var(--accent-primary)', color: 'white',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '3.5rem', overflow: 'hidden', margin: '0 auto 20px auto',
-                                    boxShadow: '0 10px 20px rgba(108, 99, 255, 0.3)'
-                                }}>
-                                    {selectedCandidate.profileImage ? (
-                                        <img src={selectedCandidate.profileImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    ) : (
-                                        selectedCandidate.avatar || selectedCandidate.name[0]
-                                    )}
-                                </div>
-                                <h2 style={{ margin: '0 0 5px 0', fontSize: '1.8rem' }}>{selectedCandidate.name}</h2>
-                                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '1rem' }}>{selectedCandidate.email}</p>
+                                fontSize: '1.6rem', overflow: 'hidden', flexShrink: 0,
+                                boxShadow: '0 4px 12px rgba(108,99,255,0.4)'
+                            }}>
+                                {selectedCandidate.profileImage
+                                    ? <img src={selectedCandidate.profileImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    : (selectedCandidate.avatar || selectedCandidate.name[0])}
                             </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '16px' }}>
-                                    <h4 style={{ margin: '0 0 15px 0', color: 'var(--accent-primary)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Quick Info</h4>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <span className="text-muted">GPA</span>
-                                            <span style={{ fontWeight: 700, color: '#10b981' }}>{selectedCandidate.gpa || "N/A"}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <span className="text-muted">Year</span>
-                                            <span style={{ fontWeight: 600 }}>{selectedCandidate.graduationYear || "N/A"}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <span className="text-muted">Role</span>
-                                            <span className="status-badge" style={{ fontSize: '0.75rem' }}>{selectedCandidate.role.toUpperCase()}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '16px' }}>
-                                    <h4 style={{ margin: '0 0 15px 0', color: 'var(--accent-primary)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Education</h4>
-                                    <p style={{ margin: '0 0 4px 0', fontWeight: 600 }}>{selectedCandidate.university || "University not specified"}</p>
-                                    <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{selectedCandidate.department || "General"}</p>
-                                </div>
-
-                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '16px' }}>
-                                    <h4 style={{ margin: '0 0 15px 0', color: 'var(--accent-primary)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Expertise</h4>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                        {selectedCandidate.skills && selectedCandidate.skills.length > 0 ? (
-                                            selectedCandidate.skills.map(skill => (
-                                                <span key={skill} className="skill-tag" style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '8px' }}>{skill}</span>
-                                            ))
-                                        ) : (
-                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No skills listed</span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style={{ marginTop: 'auto', paddingTop: '30px' }}>
-                                <Link to={`/employer/messages?contact=${selectedCandidate.id}`} className="btn btn-primary" style={{ width: '100%', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', height: '54px', borderRadius: '16px', fontSize: '1.1rem' }}>
-                                    <FiMessageSquare /> Contact Now
-                                </Link>
-                            </div>
-                        </div>
-
-                        {/* Main Content - Resume Viewer */}
-                        <div style={{
-                            flex: 1,
-                            display: 'flex', flexDirection: 'column',
-                            padding: '40px',
-                            background: 'var(--bg-card)'
-                        }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                                <h2 style={{ margin: 0, fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <FiFileText color="var(--accent-primary)" /> Resume Content
+                            {/* Name + Email */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <h2 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {selectedCandidate.name}
                                 </h2>
+                                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                                    {selectedCandidate.email}
+                                    {selectedCandidate.phone && <span style={{ marginLeft: '16px' }}>📞 {selectedCandidate.phone}</span>}
+                                </p>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div style={{ display: 'flex', gap: '12px', flexShrink: 0, alignItems: 'center' }}>
+                                <Link
+                                    to={`/employer/messages?contact=${selectedCandidate.id}`}
+                                    className="btn btn-primary"
+                                    style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '12px', padding: '10px 20px' }}
+                                >
+                                    <FiMessageSquare /> Message
+                                </Link>
                                 {selectedCandidate.resumeFile && (
-                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                    <>
                                         <button
                                             onClick={() => openResumeInNewTab(selectedCandidate.resumeFile)}
-                                            className="btn btn-primary"
-                                            style={{ display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '12px' }}
+                                            className="btn btn-outline"
+                                            style={{ display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '12px', padding: '10px 18px' }}
                                         >
-                                            <FiExternalLink /> View in New Tab
+                                            <FiExternalLink /> Open PDF
                                         </button>
                                         <a
                                             href={selectedCandidate.resumeFile.data}
                                             download={selectedCandidate.resumeFile.name}
                                             className="btn btn-outline"
-                                            style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '12px' }}
+                                            style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '12px', padding: '10px 18px' }}
                                         >
-                                            <FiDownload /> Download PDF
+                                            <FiDownload /> Download
                                         </a>
+                                    </>
+                                )}
+                                {/* Close */}
+                                <button
+                                    onClick={closeModal}
+                                    style={{
+                                        background: 'rgba(255,255,255,0.08)', border: '1px solid var(--border-color)',
+                                        width: '44px', height: '44px', borderRadius: '12px',
+                                        cursor: 'pointer', color: 'var(--text-primary)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: '1.3rem', transition: 'all 0.2s'
+                                    }}
+                                    onMouseOver={e => e.currentTarget.style.background = 'rgba(239,68,68,0.15)'}
+                                    onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                                >
+                                    <FiX />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* ── BODY: BIO SIDEBAR + PDF PANEL ── */}
+                        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+
+                            {/* LEFT — Bio Sidebar (300px, scrollable) */}
+                            <div style={{
+                                width: '300px', flexShrink: 0,
+                                background: 'var(--bg-secondary)',
+                                borderRight: '1px solid var(--border-color)',
+                                overflowY: 'auto',
+                                padding: '24px 20px',
+                                display: 'flex', flexDirection: 'column', gap: '16px'
+                            }}>
+                                {/* Quick Info */}
+                                <div style={{ background: 'var(--bg-card)', borderRadius: '14px', padding: '18px', border: '1px solid var(--border-color)' }}>
+                                    <p style={{ margin: '0 0 12px 0', fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Student Info</p>
+                                    {[
+                                        ['GPA / CGPA', selectedCandidate.gpa, '#10b981'],
+                                        ['Grad Year', selectedCandidate.graduationYear, null],
+                                        ['Department', selectedCandidate.department, null],
+                                        ['Phone', selectedCandidate.phone, null],
+                                    ].map(([label, val]) => val && (
+                                        <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderBottom: '1px solid var(--border-color)' }}>
+                                            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{label}</span>
+                                            <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{val}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Education */}
+                                <div style={{ background: 'var(--bg-card)', borderRadius: '14px', padding: '18px', border: '1px solid var(--border-color)' }}>
+                                    <p style={{ margin: '0 0 10px 0', fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Education</p>
+                                    <p style={{ margin: '0 0 4px 0', fontWeight: 600, fontSize: '0.95rem' }}>{selectedCandidate.university || 'Not specified'}</p>
+                                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{selectedCandidate.department || 'General'}</p>
+                                </div>
+
+                                {/* Skills */}
+                                {selectedCandidate.skills && selectedCandidate.skills.length > 0 && (
+                                    <div style={{ background: 'var(--bg-card)', borderRadius: '14px', padding: '18px', border: '1px solid var(--border-color)' }}>
+                                        <p style={{ margin: '0 0 12px 0', fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Skills</p>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {selectedCandidate.skills.map(skill => (
+                                                <span key={skill} className="skill-tag" style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '8px' }}>{skill}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Projects */}
+                                {selectedCandidate.projects && selectedCandidate.projects.length > 0 && (
+                                    <div style={{ background: 'var(--bg-card)', borderRadius: '14px', padding: '18px', border: '1px solid var(--border-color)' }}>
+                                        <p style={{ margin: '0 0 12px 0', fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Projects</p>
+                                        {selectedCandidate.projects.map((proj, i) => (
+                                            <div key={i} style={{ marginBottom: '10px' }}>
+                                                <p style={{ margin: '0 0 2px 0', fontWeight: 600, fontSize: '0.88rem' }}>{typeof proj === 'string' ? proj : proj.name}</p>
+                                                {proj.description && <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{proj.description}</p>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Experience */}
+                                {selectedCandidate.experience && selectedCandidate.experience.length > 0 && (
+                                    <div style={{ background: 'var(--bg-card)', borderRadius: '14px', padding: '18px', border: '1px solid var(--border-color)' }}>
+                                        <p style={{ margin: '0 0 12px 0', fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Experience</p>
+                                        {selectedCandidate.experience.map((exp, i) => (
+                                            <div key={i} style={{ marginBottom: '10px' }}>
+                                                <p style={{ margin: '0 0 2px 0', fontWeight: 600, fontSize: '0.88rem' }}>{typeof exp === 'string' ? exp : exp.role}</p>
+                                                {exp.company && <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{exp.company}</p>}
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </div>
 
+                            {/* RIGHT — PDF Resume Viewer (fills remaining width) */}
                             <div style={{
-                                flex: 1,
-                                backgroundColor: 'var(--bg-secondary)',
-                                borderRadius: '24px',
-                                border: '1px solid var(--border-color)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                position: 'relative',
+                                flex: 1, display: 'flex', flexDirection: 'column',
+                                background: 'var(--bg-card)',
                                 overflow: 'hidden'
                             }}>
+                                {/* PDF title strip */}
+                                <div style={{
+                                    padding: '14px 24px',
+                                    borderBottom: '1px solid var(--border-color)',
+                                    display: 'flex', alignItems: 'center', gap: '10px',
+                                    flexShrink: 0, background: 'var(--bg-secondary)'
+                                }}>
+                                    <FiFileText color="var(--accent-primary)" size={18} />
+                                    <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>
+                                        Resume — {selectedCandidate.resumeFile ? selectedCandidate.resumeFile.name : 'Not uploaded'}
+                                    </span>
+                                </div>
+
+                                {/* PDF iframe fills all remaining space */}
                                 {selectedCandidate.resumeFile ? (
-                                    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        {/* Inline PDF Viewer */}
-                                        <iframe
-                                            src={selectedCandidate.resumeFile.data}
-                                            title={selectedCandidate.resumeFile.name || 'Resume'}
-                                            style={{
-                                                flex: 1,
-                                                width: '100%',
-                                                border: 'none',
-                                                borderRadius: '16px',
-                                                backgroundColor: '#fff'
-                                            }}
-                                        />
-                                        {/* Fallback notice for browsers that block iframes */}
-                                        <p style={{ margin: 0, textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                            If the PDF is not visible above, use the &ldquo;View in New Tab&rdquo; button above.
-                                        </p>
-                                    </div>
+                                    <iframe
+                                        src={selectedCandidate.resumeFile.data}
+                                        title={selectedCandidate.resumeFile.name || 'Resume'}
+                                        style={{
+                                            flex: 1, width: '100%',
+                                            border: 'none',
+                                            backgroundColor: '#ffffff',
+                                            display: 'block'
+                                        }}
+                                    />
                                 ) : (
-                                    <div style={{ textAlign: 'center', opacity: 0.5 }}>
-                                        <FiFileText size={64} style={{ marginBottom: '20px' }} />
-                                        <p style={{ fontSize: '1.2rem' }}>Candidate has not uploaded a resume yet.</p>
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
+                                        <FiFileText size={80} style={{ marginBottom: '20px' }} />
+                                        <p style={{ fontSize: '1.2rem', fontWeight: 600 }}>No resume uploaded yet</p>
+                                        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Student has not provided a resume for this application</p>
                                     </div>
                                 )}
                             </div>
@@ -363,6 +392,8 @@ export default function ApplicationTable({ applications, showActions, onUpdateSt
                     </div>
                 </div>
             )}
+
+
 
             {/* Interview Scheduling Modal */}
             {schedulingApp && (
