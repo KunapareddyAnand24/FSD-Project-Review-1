@@ -6,16 +6,16 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
     // 1. Initialize persistent user list from localStorage, fallback to mockData
     const [localUsers, setLocalUsers] = useState(() => {
-        const savedUsers = localStorage.getItem("placementUsersList_v2");
+        const savedUsers = localStorage.getItem("placementUsersList_v3");
         let parsed = savedUsers ? JSON.parse(savedUsers) : mockUsers;
 
-        // Auto-heal missing demo credentials (e.g. if localStorage was previously cleared)
+        // Auto-heal missing demo credentials
         const hasDemo = parsed.some(u => u.email === "demo@student.com");
         if (!hasDemo) {
             const missingMocks = mockUsers.filter(mu => !parsed.some(lu => lu.email === mu.email));
             if (missingMocks.length > 0) {
                 parsed = [...parsed, ...missingMocks];
-                localStorage.setItem("placementUsersList_v2", JSON.stringify(parsed));
+                localStorage.setItem("placementUsersList_v3", JSON.stringify(parsed));
             }
         }
         return parsed;
@@ -23,14 +23,14 @@ export function AuthProvider({ children }) {
 
     // Save the initial mock list if it didn't exist vertically yet
     useEffect(() => {
-        if (!localStorage.getItem("placementUsersList_v2")) {
-            localStorage.setItem("placementUsersList_v2", JSON.stringify(localUsers));
+        if (!localStorage.getItem("placementUsersList_v3")) {
+            localStorage.setItem("placementUsersList_v3", JSON.stringify(localUsers));
         }
     }, [localUsers]);
 
     // 2. Track currently logged-in user
     const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem("placementUser_v2");
+        const saved = localStorage.getItem("placementUser_v3");
         return saved ? JSON.parse(saved) : null;
     });
 
@@ -46,7 +46,7 @@ export function AuthProvider({ children }) {
             const userData = { ...found };
             delete userData.password;
             setUser(userData);
-            localStorage.setItem("placementUser_v2", JSON.stringify(userData));
+            localStorage.setItem("placementUser_v3", JSON.stringify(userData));
             return { success: true, user: userData };
         }
         return { success: false, message: "Invalid email or password" };
@@ -57,13 +57,13 @@ export function AuthProvider({ children }) {
             u.id === userId ? { ...u, role: newRole } : u
         );
         setLocalUsers(updatedUsersList);
-        localStorage.setItem("placementUsersList_v2", JSON.stringify(updatedUsersList));
+        localStorage.setItem("placementUsersList_v3", JSON.stringify(updatedUsersList));
 
         // If editing self, update active session
         if (user && user.id === userId) {
             const updated = { ...user, role: newRole };
             setUser(updated);
-            localStorage.setItem("placementUser_v2", JSON.stringify(updated));
+            localStorage.setItem("placementUser_v3", JSON.stringify(updated));
         }
         return { success: true };
     };
@@ -71,7 +71,7 @@ export function AuthProvider({ children }) {
     const deleteUser = (userId) => {
         const updatedUsersList = localUsers.filter((u) => u.id !== userId);
         setLocalUsers(updatedUsersList);
-        localStorage.setItem("placementUsersList_v2", JSON.stringify(updatedUsersList));
+        localStorage.setItem("placementUsersList_v3", JSON.stringify(updatedUsersList));
         return { success: true };
     };
 
@@ -100,14 +100,14 @@ export function AuthProvider({ children }) {
         // Push to local Users list array and persist to storage
         const updatedUsersList = [...localUsers, newUser];
         setLocalUsers(updatedUsersList);
-        localStorage.setItem("placementUsersList_v2", JSON.stringify(updatedUsersList));
+        localStorage.setItem("placementUsersList_v3", JSON.stringify(updatedUsersList));
 
         return { success: true };
     };
 
     const logout = () => {
         setUser(null);
-        localStorage.removeItem("placementUser_v2");
+        localStorage.removeItem("placementUser_v3");
         // Clear globally persistent DataContext keys so that data from another account doesn't leak.
         localStorage.removeItem("skillshala_jobs_v2");
         localStorage.removeItem("skillshala_applications_v2");
@@ -120,14 +120,14 @@ export function AuthProvider({ children }) {
     const updateProfile = (updates) => {
         const updated = { ...user, ...updates };
         setUser(updated);
-        localStorage.setItem("placementUser_v2", JSON.stringify(updated));
+        localStorage.setItem("placementUser_v3", JSON.stringify(updated));
 
         // Make sure to also reflect profile updates globally on the users list
         const updatedUsersList = localUsers.map((u) =>
             u.email === user.email ? { ...u, ...updates } : u
         );
         setLocalUsers(updatedUsersList);
-        localStorage.setItem("placementUsersList_v2", JSON.stringify(updatedUsersList));
+        localStorage.setItem("placementUsersList_v3", JSON.stringify(updatedUsersList));
     };
 
     return (
