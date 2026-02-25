@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FiMessageSquare, FiUser, FiX, FiFileText } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function ApplicationTable({ applications, showActions, onUpdateStatus }) {
     const statusColors = {
