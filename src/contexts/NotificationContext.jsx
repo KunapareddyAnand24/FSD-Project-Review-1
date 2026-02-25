@@ -71,6 +71,18 @@ export function NotificationProvider({ children }) {
         setToasts((prev) => prev.filter((t) => t.toastId !== toastId));
     }, []);
 
+    // CROSS-TAB SYNC: Listen for storage changes from other tabs
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === "skillshala_notifications_clear" && e.newValue) {
+                setNotifications(JSON.parse(e.newValue));
+            }
+        };
+
+        window.addEventListener("storage", handleStorageChange);
+        return () => window.removeEventListener("storage", handleStorageChange);
+    }, []);
+
     return (
         <NotificationContext.Provider
             value={{

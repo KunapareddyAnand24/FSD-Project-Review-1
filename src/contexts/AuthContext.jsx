@@ -39,7 +39,7 @@ export function AuthProvider({ children }) {
 
         // Authenticate against the persistent user list instead of static mockData
         const found = localUsers.find(
-            (u) => u.email.trim().toLowerCase() === inputEmail && u.password === password.trim()
+            (u) => (u.email || "").toLowerCase().trim() === inputEmail && u.password === password.trim()
         );
 
         if (found) {
@@ -76,7 +76,8 @@ export function AuthProvider({ children }) {
     };
 
     const register = (name, email, password, role, extra = {}) => {
-        const exists = localUsers.find((u) => u.email === email);
+        const normalizedEmail = email.trim().toLowerCase();
+        const exists = localUsers.find((u) => u.email.toLowerCase().trim() === normalizedEmail);
         if (exists) {
             return { success: false, message: "Email already registered" };
         }
@@ -84,7 +85,7 @@ export function AuthProvider({ children }) {
         const newUser = {
             id: Date.now(), // Unique ID dynamically generated
             name,
-            email,
+            email: normalizedEmail,
             password,
             role,
             avatar: name
@@ -124,11 +125,28 @@ export function AuthProvider({ children }) {
 
         // Make sure to also reflect profile updates globally on the users list
         const updatedUsersList = localUsers.map((u) =>
-            u.email === user.email ? { ...u, ...updates } : u
+            u.id === user.id ? { ...u, ...updates } : u
         );
         setLocalUsers(updatedUsersList);
         localStorage.setItem("placementUsersList_v3", JSON.stringify(updatedUsersList));
     };
+
+    // CROSS-TAB SYNC: Listen for storage changes from other tabs
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === "placementUser_v3") {
+                // Someone logged in or out in another tab
+                setUser(e.newValue ? JSON.parse(e.newValue) : null);
+            }
+            if (e.key === "placementUsersList_v3") {
+                // User database updated in another tab
+                setLocalUsers(e.newValue ? JSON.parse(e.newValue) : []);
+            }
+        };
+
+        window.addEventListener("storage", handleStorageChange);
+        return () => window.removeEventListener("storage", handleStorageChange);
+    }, []);
 
     return (
         <AuthContext.Provider value={{ user, localUsers, login, register, logout, updateProfile, editUserRole, deleteUser }}>

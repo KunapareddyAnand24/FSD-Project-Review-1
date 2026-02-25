@@ -73,6 +73,24 @@ export function DataProvider({ children }) {
         ));
     }, []);
 
+    // CROSS-TAB SYNC: Listen for storage changes from other tabs
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === "skillshala_jobs_v2" && e.newValue) {
+                setJobs(JSON.parse(e.newValue));
+            }
+            if (e.key === "skillshala_applications_v2" && e.newValue) {
+                setApplications(JSON.parse(e.newValue));
+            }
+            if (e.key === "skillshala_placements_v2" && e.newValue) {
+                setPlacements(JSON.parse(e.newValue));
+            }
+        };
+
+        window.addEventListener("storage", handleStorageChange);
+        return () => window.removeEventListener("storage", handleStorageChange);
+    }, []);
+
     return (
         <DataContext.Provider value={{
             jobs,
