@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { DataProvider } from "./contexts/DataContext";
+import { MessagingProvider } from "./contexts/MessagingContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/DashboardLayout";
 
@@ -57,75 +58,77 @@ function App() {
     <AuthProvider>
       <DataProvider>
         <NotificationProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/" element={<RootRoute />} />
+          <MessagingProvider>
+            <BrowserRouter>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/" element={<RootRoute />} />
 
-              {/* Admin Routes */}
-              <Route
-                element={
-                  <ProtectedRoute allowedRoles={["admin"]}>
-                    <DashboardLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/users" element={<ManageUsers />} />
-                <Route path="/admin/placements" element={<PlacementData />} />
-                <Route path="/admin/profile" element={<AdminProfile />} />
-              </Route>
+                {/* Admin Routes */}
+                <Route
+                  element={
+                    <ProtectedRoute allowedRoles={["admin"]}>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/users" element={<ManageUsers />} />
+                  <Route path="/admin/placements" element={<PlacementData />} />
+                  <Route path="/admin/profile" element={<AdminProfile />} />
+                </Route>
 
-              {/* Student Routes */}
-              <Route
-                element={
-                  <ProtectedRoute allowedRoles={["student"]}>
-                    <DashboardLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/student" element={<StudentDashboard />} />
-                <Route path="/student/jobs" element={<ExploreJobs />} />
-                <Route path="/student/applications" element={<MyApplications />} />
-                <Route path="/student/messages" element={<Messages />} />
-                <Route path="/student/calendar" element={<StudentCalendar />} />
-                <Route path="/student/profile" element={<StudentProfile />} />
-              </Route>
+                {/* Student Routes */}
+                <Route
+                  element={
+                    <ProtectedRoute allowedRoles={["student"]}>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/student" element={<StudentDashboard />} />
+                  <Route path="/student/jobs" element={<ExploreJobs />} />
+                  <Route path="/student/applications" element={<MyApplications />} />
+                  <Route path="/student/messages" element={<Messages />} />
+                  <Route path="/student/calendar" element={<StudentCalendar />} />
+                  <Route path="/student/profile" element={<StudentProfile />} />
+                </Route>
 
-              {/* Employer Routes */}
-              <Route
-                element={
-                  <ProtectedRoute allowedRoles={["employer"]}>
-                    <DashboardLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/employer" element={<EmployerDashboard />} />
-                <Route path="/employer/post-job" element={<PostJob />} />
-                <Route path="/employer/listings" element={<MyListings />} />
-                <Route path="/employer/applications" element={<ReviewApplications />} />
-                <Route path="/employer/messages" element={<Messages />} />
-              </Route>
+                {/* Employer Routes */}
+                <Route
+                  element={
+                    <ProtectedRoute allowedRoles={["employer"]}>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/employer" element={<EmployerDashboard />} />
+                  <Route path="/employer/post-job" element={<PostJob />} />
+                  <Route path="/employer/listings" element={<MyListings />} />
+                  <Route path="/employer/applications" element={<ReviewApplications />} />
+                  <Route path="/employer/messages" element={<Messages />} />
+                </Route>
 
-              {/* Officer Routes */}
-              <Route
-                element={
-                  <ProtectedRoute allowedRoles={["officer"]}>
-                    <DashboardLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/officer" element={<OfficerDashboard />} />
-                <Route path="/officer/records" element={<PlacementRecords />} />
-                <Route path="/officer/reports" element={<Reports />} />
-              </Route>
+                {/* Officer Routes */}
+                <Route
+                  element={
+                    <ProtectedRoute allowedRoles={["officer"]}>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/officer" element={<OfficerDashboard />} />
+                  <Route path="/officer/records" element={<PlacementRecords />} />
+                  <Route path="/officer/reports" element={<Reports />} />
+                </Route>
 
-              {/* Catch all */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
+                {/* Catch all */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </BrowserRouter>
+          </MessagingProvider>
         </NotificationProvider>
       </DataProvider>
     </AuthProvider>

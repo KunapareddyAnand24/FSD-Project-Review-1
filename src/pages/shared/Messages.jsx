@@ -1,47 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationContext";
 import { useData } from "../../contexts/DataContext";
+import { useMessaging } from "../../contexts/MessagingContext";
 import { FiSend, FiMessageCircle } from "react-icons/fi";
-
-// Mock message data
-const initialMessages = [];
 
 export default function Messages() {
     const { user, localUsers } = useAuth();
     const { applications, jobs } = useData();
     const { addNotification } = useNotifications();
+    const { messages, sendMessage } = useMessaging();
 
-    // Initialize messages from localStorage or fallback to initialMessages
-    const [messages, setMessages] = useState(() => {
-        const savedMessages = localStorage.getItem("skillshala_messages_clear");
-        return savedMessages ? JSON.parse(savedMessages) : initialMessages;
-    });
     const [newMessage, setNewMessage] = useState("");
     const [activeThread, setActiveThread] = useState(null);
+    const chatBottomRef = useRef(null);
+    const [searchParams] = useSearchParams();
 
-    // Persist messages to localStorage whenever they change
-    useEffect(() => {
-        localStorage.setItem("skillshala_messages_clear", JSON.stringify(messages));
-    }, [messages]);
-
-    // Sync messages across tabs/windows in real-time
-    useEffect(() => {
-        const handleStorageChange = (e) => {
-            if (e.key === "skillshala_messages_clear" && e.newValue) {
-                try {
-                    setMessages(JSON.parse(e.newValue));
-                } catch (error) {
-                    console.error("Error parsing synced messages:", error);
-                }
-            }
-        };
-
-        window.addEventListener("storage", handleStorageChange);
-        return () => window.removeEventListener("storage", handleStorageChange);
-    }, []);
-
-    // Get all contacts the user has threads with
+    // Filter messages relevant to current user
     const myMessages = messages.filter(
         (m) => m.senderId === user.id || m.receiverId === user.id
     );
@@ -49,15 +25,11 @@ export default function Messages() {
     // Group by threadId
     const threads = {};
     myMessages.forEach((m) => {
-        if (!threads[m.threadId]) {
-            threads[m.threadId] = [];
-        }
+        if (!threads[m.threadId]) threads[m.threadId] = [];
         threads[m.threadId].push(m);
     });
 
-    // We also want to auto-create contact threads based on Applications
-    // If you're a student, you can message employers you've applied to.
-    // If you're an employer, you can message students who've applied to you.
+    // Build list of possible contacts from applications
     let possibleContacts = [];
     if (user.role === "student") {
         const appliedJobs = applications.filter(a => a.studentId === user.id);
@@ -72,52 +44,70 @@ export default function Messages() {
         possibleContacts = [...new Set(myApplicants.map(a => a.studentId))];
     }
 
-    // Initialize these empty threads into the dictionary if they don't exist
+    // Ensure empty threads exist for all possible contacts
     possibleContacts.forEach(contactId => {
         const threadIdOptions = [
             `msg_${user.id}_${contactId}`,
             `msg_${contactId}_${user.id}`
         ];
-        // Check if either possible thread ID exists in the threads object
         const existingId = threadIdOptions.find(id => threads[id]);
-
         if (!existingId) {
-            // Create a fake "zero-message" thread
             threads[threadIdOptions[0]] = [];
         }
     });
 
-    // Get thread summaries
+    // Build thread list with metadata
     const threadList = Object.entries(threads).map(([threadId, msgs]) => {
         let otherPersonId;
-        let otherPerson;
-
         if (msgs.length > 0) {
             const lastMsg = msgs[msgs.length - 1];
             otherPersonId = lastMsg.senderId === user.id ? lastMsg.receiverId : lastMsg.senderId;
         } else {
-            // Extract from ID because there are no messages
-            const ids = threadId.replace('msg_', '').split('_');
+            const ids = threadId.replace("msg_", "").split("_");
             otherPersonId = parseInt(ids[0]) === user.id ? parseInt(ids[1]) : parseInt(ids[0]);
         }
-
-        otherPerson = localUsers.find((u) => u.id === otherPersonId);
-
+        const otherPerson = localUsers.find(u => u.id === otherPersonId);
+        const unreadCount = msgs.filter(m => m.senderId !== user.id && !m.read).length;
         return {
             threadId,
-            otherPerson: otherPerson || { name: "Unknown", avatar: "?" },
+            otherPerson: otherPerson || { name: "Unknown", avatar: "?", id: otherPersonId },
             lastMessage: msgs.length > 0 ? msgs[msgs.length - 1] : null,
-            lastTime: msgs.length > 0 ? msgs[msgs.length - 1].timestamp : null,
+            unreadCount,
             messages: msgs,
         };
-    }).filter(t => t.otherPerson); // keep only valid threads
+    }).filter(t => t.otherPerson);
 
-    const activeMessages = activeThread
-        ? threads[activeThread] || []
-        : [];
+    // Auto-select thread from ?contact=ID URL param
+    useEffect(() => {
+        const contactParam = searchParams.get("contact");
+        if (!contactParam) return;
+        const contactId = parseInt(contactParam);
 
+        const threadIdOptions = [
+            `msg_${user.id}_${contactId}`,
+            `msg_${contactId}_${user.id}`
+        ];
+        const existingThread = threadList.find(t => threadIdOptions.includes(t.threadId));
+        if (existingThread) {
+            setActiveThread(existingThread.threadId);
+        } else {
+            // Create empty thread and select it
+            const newThreadId = threadIdOptions[0];
+            setActiveThread(newThreadId);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
+
+    // Auto-scroll to bottom when new messages arrive
+    useEffect(() => {
+        if (chatBottomRef.current) {
+            chatBottomRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages, activeThread]);
+
+    const activeMessages = activeThread ? (threads[activeThread] || []) : [];
     const activeContact = activeThread
-        ? threadList.find((t) => t.threadId === activeThread)?.otherPerson
+        ? threadList.find(t => t.threadId === activeThread)?.otherPerson
         : null;
 
     const handleSend = (e) => {
@@ -125,12 +115,13 @@ export default function Messages() {
         if (!newMessage.trim() || !activeThread || !activeContact) return;
 
         const msg = {
-            id: messages.length + 1,
+            id: Date.now(),
             threadId: activeThread,
             senderId: user.id,
             receiverId: activeContact.id,
             senderName: user.name,
             receiverName: activeContact.name,
+            read: false,
             message: newMessage.trim(),
             timestamp: new Date().toLocaleString("en-IN", {
                 year: "numeric",
@@ -141,10 +132,11 @@ export default function Messages() {
                 hour12: true,
             }),
         };
-        setMessages([...messages, msg]);
+
+        sendMessage(msg);
         setNewMessage("");
 
-        // Notify the receiver
+        // Notify receiver
         addNotification({
             type: "info",
             title: "New Message",
@@ -175,14 +167,26 @@ export default function Messages() {
                                 key={thread.threadId}
                                 className={`thread-item ${activeThread === thread.threadId ? "active" : ""}`}
                                 onClick={() => setActiveThread(thread.threadId)}
+                                style={{ position: "relative" }}
                             >
                                 <div className="thread-avatar">{thread.otherPerson.avatar}</div>
                                 <div className="thread-info">
                                     <span className="thread-name">{thread.otherPerson.name}</span>
                                     <span className="thread-preview">
-                                        {thread.lastMessage ? `${thread.lastMessage.message.substring(0, 40)}...` : "Start a conversation"}
+                                        {thread.lastMessage
+                                            ? thread.lastMessage.message.substring(0, 40) + (thread.lastMessage.message.length > 40 ? "..." : "")
+                                            : "Start a conversation"}
                                     </span>
                                 </div>
+                                {thread.unreadCount > 0 && (
+                                    <span style={{
+                                        position: "absolute", right: "16px", top: "50%", transform: "translateY(-50%)",
+                                        background: "var(--accent-primary)", color: "white",
+                                        borderRadius: "50%", width: "20px", height: "20px",
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        fontSize: "0.7rem", fontWeight: 700
+                                    }}>{thread.unreadCount}</span>
+                                )}
                             </div>
                         ))
                     )}
@@ -202,23 +206,29 @@ export default function Messages() {
                                 <div>
                                     <strong>{activeContact?.name}</strong>
                                     <span className="online-indicator">● Online</span>
-                                    <p className="chat-subtitle">Start a conversation with '{activeContact.name}'</p>
+                                    <p className="chat-subtitle">Conversation with {activeContact?.companyName || activeContact?.name}</p>
                                 </div>
                             </div>
                             <div className="chat-messages">
                                 {activeMessages.length === 0 ? (
                                     <div className="empty-state">
-                                        <p style={{ color: 'var(--text-muted)' }}>Send your first message to {activeContact.companyName || activeContact.name}</p>
+                                        <p style={{ color: "var(--text-muted)" }}>
+                                            Send your first message to {activeContact?.companyName || activeContact?.name}
+                                        </p>
                                     </div>
-                                ) : activeMessages.map((msg) => (
-                                    <div
-                                        key={msg.id}
-                                        className={`chat-bubble ${msg.senderId === user.id ? "sent" : "received"}`}
-                                    >
-                                        <p>{msg.message}</p>
-                                        <span className="chat-time">{msg.timestamp}</span>
-                                    </div>
-                                ))}
+                                ) : (
+                                    activeMessages.map((msg) => (
+                                        <div
+                                            key={msg.id}
+                                            className={`chat-bubble ${msg.senderId === user.id ? "sent" : "received"}`}
+                                        >
+                                            <p>{msg.message}</p>
+                                            <span className="chat-time">{msg.timestamp}</span>
+                                        </div>
+                                    ))
+                                )}
+                                {/* Scroll anchor */}
+                                <div ref={chatBottomRef} />
                             </div>
                             <form className="chat-input-area" onSubmit={handleSend}>
                                 <input
@@ -227,6 +237,7 @@ export default function Messages() {
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
                                     className="chat-input"
+                                    autoComplete="off"
                                 />
                                 <button type="submit" className="btn btn-primary chat-send-btn">
                                     <FiSend />

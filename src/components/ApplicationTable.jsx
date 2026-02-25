@@ -1,5 +1,34 @@
 import { useState } from "react";
-import { FiMessageSquare, FiUser, FiX, FiFileText } from "react-icons/fi";
+import { FiMessageSquare, FiUser, FiX, FiFileText, FiExternalLink, FiDownload } from "react-icons/fi";
+
+// Convert a base64 data URL to a Blob (for opening as object URL in new tab)
+function dataURLtoBlob(dataUrl) {
+    try {
+        const [header, data] = dataUrl.split(',');
+        const mime = header.match(/:(.*?);/)[1];
+        const binary = atob(data);
+        const array = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+        return new Blob([array], { type: mime });
+    } catch {
+        return null;
+    }
+}
+
+function openResumeInNewTab(resumeFile) {
+    try {
+        const blob = dataURLtoBlob(resumeFile.data);
+        if (blob) {
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        } else {
+            // Fallback: open raw data URL
+            window.open(resumeFile.data, '_blank');
+        }
+    } catch {
+        window.open(resumeFile.data, '_blank');
+    }
+}
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -276,8 +305,20 @@ export default function ApplicationTable({ applications, showActions, onUpdateSt
                                 </h2>
                                 {selectedCandidate.resumeFile && (
                                     <div style={{ display: 'flex', gap: '12px' }}>
-                                        <a href={selectedCandidate.resumeFile.data} download={selectedCandidate.resumeFile.name} className="btn btn-outline" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '12px' }}>
-                                            <FiFileText /> Download PDF
+                                        <button
+                                            onClick={() => openResumeInNewTab(selectedCandidate.resumeFile)}
+                                            className="btn btn-primary"
+                                            style={{ display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '12px' }}
+                                        >
+                                            <FiExternalLink /> View in New Tab
+                                        </button>
+                                        <a
+                                            href={selectedCandidate.resumeFile.data}
+                                            download={selectedCandidate.resumeFile.name}
+                                            className="btn btn-outline"
+                                            style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '12px' }}
+                                        >
+                                            <FiDownload /> Download PDF
                                         </a>
                                     </div>
                                 )}
@@ -293,25 +334,23 @@ export default function ApplicationTable({ applications, showActions, onUpdateSt
                                 overflow: 'hidden'
                             }}>
                                 {selectedCandidate.resumeFile ? (
-                                    <div style={{ textAlign: 'center', padding: '60px' }}>
-                                        <div style={{
-                                            position: 'relative', display: 'inline-block', marginBottom: '30px'
-                                        }}>
-                                            <FiFileText size={100} color="var(--accent-primary)" style={{ opacity: 0.8 }} />
-                                            <div style={{
-                                                position: 'absolute', bottom: -5, right: -5,
-                                                background: '#10b981', color: 'white',
-                                                padding: '4px 8px', borderRadius: '6px', fontSize: '0.7rem'
-                                            }}>CONFIRMED</div>
-                                        </div>
-                                        <h3 style={{ margin: '0 0 10px 0', fontSize: '1.5rem' }}>{selectedCandidate.resumeFile.name}</h3>
-                                        <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 30px auto', lineHeight: '1.6' }}>
-                                            The candidate has provided a professional resume for your review.
-                                            You can view all academic and professional details in the downloadable file.
+                                    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        {/* Inline PDF Viewer */}
+                                        <iframe
+                                            src={selectedCandidate.resumeFile.data}
+                                            title={selectedCandidate.resumeFile.name || 'Resume'}
+                                            style={{
+                                                flex: 1,
+                                                width: '100%',
+                                                border: 'none',
+                                                borderRadius: '16px',
+                                                backgroundColor: '#fff'
+                                            }}
+                                        />
+                                        {/* Fallback notice for browsers that block iframes */}
+                                        <p style={{ margin: 0, textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                            If the PDF is not visible above, use the &ldquo;View in New Tab&rdquo; button above.
                                         </p>
-                                        <div style={{ display: 'inline-flex', padding: '12px 24px', backgroundColor: 'rgba(108, 99, 255, 0.1)', color: 'var(--accent-primary)', borderRadius: '12px', fontWeight: 600, fontSize: '0.9rem' }}>
-                                            Profile Verification Passed ✅
-                                        </div>
                                     </div>
                                 ) : (
                                     <div style={{ textAlign: 'center', opacity: 0.5 }}>
